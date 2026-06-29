@@ -1,0 +1,10 @@
+{
+  "name": "voidsector-status",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "serve . -p ${PORT:-8080}"
+  },
+  "dependencies": {
+    "serve": "^14.2.3"
+  }
+}
