@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoidSector Status</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #17171a;
+      --border: rgba(255,255,255,.07);
+      --text: #e8e8ec;
+      --muted: rgba(255,255,255,.38);
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --primary: #c084fc;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      gap: 0;
+    }
+
+    /* Logo */
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .logo span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 6px; }
+
+    /* Main card */
+    .card {
+      margin-top: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 36px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Status row */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--yellow);
+      transition: background .4s;
+    }
+    .status-dot.up   { background: var(--green); animation: pulse-green 2.5s ease-in-out infinite; }
+    .status-dot.down { background: var(--red);   animation: pulse-red   1.5s ease-in-out infinite; }
+
+    @keyframes pulse-green {
+      0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+      50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    }
+    @keyframes pulse-red {
+      0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+      50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+    }
+
+    .status-info { flex: 1; }
+    .status-label {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .status-label.up   { color: var(--green); }
+    .status-label.down { color: var(--red); }
+    .status-label.checking { color: var(--yellow); }
+
+    .status-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* Latency */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .meta-row b { color: var(--text); font-weight: 500; }
+
+    /* History bar */
+    .history-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .history-label { font-size: 12px; color: var(--muted); }
+    .history-bar {
+      display: flex;
+      gap: 3px;
+      align-items: flex-end;
+    }
+    .history-bar .tick {
+      flex: 1;
+      height: 28px;
+      border-radius: 3px;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .history-bar .tick.up   { background: rgba(34,197,94,.55); }
+    .history-bar .tick.down { background: rgba(239,68,68,.65); }
+
+    /* Refresh btn */
+    .refresh-btn {
+      align-self: center;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 6px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .refresh-btn:active { transform: scale(.95); }
+
+    /* Contact card */
+    .contact-card {
+      margin-top: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 36px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .contact-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .contact-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: rgba(255,255,255,.04);
+      transition: background .15s, border-color .15s;
+      cursor: pointer;
+    }
+    .contact-btn:hover { background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.18); }
+    .contact-btn svg { flex-shrink: 0; }
+    .contact-btn.discord:hover { border-color: #5865f2; color: #5865f2; }
+    .contact-btn.email:hover   { border-color: var(--primary); color: var(--primary); }
+
+    /* Footer */
+    .footer {
+      margin-top: 28px;
+      font-size: 11px;
+      color: rgba(255,255,255,.2);
+    }
+
+    @media (max-width: 520px) {
+      .card, .contact-card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo">VoidSector <span>status</span></div>
+
+  <div class="card">
+    <div class="status-row">
+      <div class="status-dot" id="dot"></div>
+      <div class="status-info">
+        <div class="status-label checking" id="statusLabel">กำลังตรวจสอบ…</div>
+        <div class="status-sub" id="statusSub">voidsector.net</div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="meta-row">
+      <span>Response time</span>
+      <b id="latency">—</b>
+    </div>
+    <div class="meta-row">
+      <span>ตรวจสอบล่าสุด</span>
+      <b id="lastCheck">—</b>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="history-wrap">
+      <div class="history-label">ประวัติ 30 ครั้งล่าสุด (ซ้าย = เก่า, ขวา = ใหม่)</div>
+      <div class="history-bar" id="historyBar">
+        <!-- ticks injected by JS -->
+      </div>
+    </div>
+
+    <button class="refresh-btn" onclick="check()">↻ ตรวจสอบอีกครั้ง</button>
+  </div>
+
+  <div class="contact-card">
+    <div class="contact-title">ติดต่อแอดมิน</div>
+    <div class="contact-btns">
+      <a class="contact-btn email" href="mailto:nopparoot147@gmail.com">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+        nopparoot147@gmail.com
+      </a>
+      <a class="contact-btn discord" href="https://discord.com/users/salty6ix" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.03.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 13.94 13.94 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.13 13.13 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+        </svg>
+        salty6ix
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">ตรวจสอบอัตโนมัติทุก 60 วินาที</div>
+
+  <script>
+    const HISTORY_KEY = 'vs_status_history';
+    const MAX_HISTORY = 30;
+    const CHECK_INTERVAL = 60000;
+
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+
+    const dot         = document.getElementById('dot');
+    const label       = document.getElementById('statusLabel');
+    const sub         = document.getElementById('statusSub');
+    const latencyEl   = document.getElementById('latency');
+    const lastCheckEl = document.getElementById('lastCheck');
+    const barEl       = document.getElementById('historyBar');
+
+    function renderBar() {
+      barEl.innerHTML = '';
+      const show = history.slice(-MAX_HISTORY);
+      // pad left if fewer than MAX_HISTORY
+      const pad = MAX_HISTORY - show.length;
+      for (let i = 0; i < pad; i++) {
+        const t = document.createElement('div');
+        t.className = 'tick';
+        barEl.appendChild(t);
+      }
+      show.forEach(s => {
+        const t = document.createElement('div');
+        t.className = 'tick ' + (s ? 'up' : 'down');
+        t.title = s ? 'ออนไลน์' : 'ออฟไลน์';
+        barEl.appendChild(t);
+      });
+    }
+
+    function fmtTime(d) {
+      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    async function check() {
+      // Reset to checking state
+      dot.className = 'status-dot';
+      label.className = 'status-label checking';
+      label.textContent = 'กำลังตรวจสอบ…';
+
+      const start = Date.now();
+      let up = false;
+      let ms = null;
+
+      try {
+        // no-cors fetch — if it completes (even opaque), the server responded
+        const res = await Promise.race([
+          fetch('https://voidsector.net/favicon.ico', { mode: 'no-cors', cache: 'no-store' }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+        ]);
+        ms = Date.now() - start;
+        up = true;
+      } catch {
+        ms = null;
+        up = false;
+      }
+
+      // Update UI
+      if (up) {
+        dot.className = 'status-dot up';
+        label.className = 'status-label up';
+        label.textContent = 'ออนไลน์';
+        sub.textContent = `voidsector.net กำลังทำงานปกติ`;
+        latencyEl.textContent = ms + ' ms';
+      } else {
+        dot.className = 'status-dot down';
+        label.className = 'status-label down';
+        label.textContent = 'ออฟไลน์';
+        sub.textContent = 'voidsector.net ไม่ตอบสนอง';
+        latencyEl.textContent = '—';
+      }
+
+      lastCheckEl.textContent = fmtTime(new Date());
+
+      // Save history
+      history.push(up);
+      if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      renderBar();
+    }
+
+    // Init
+    renderBar();
+    check();
+    setInterval(check, CHECK_INTERVAL);
+  </script>
+</body>
+</html>
