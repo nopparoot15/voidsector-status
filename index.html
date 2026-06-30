@@ -260,6 +260,14 @@
       banner.className = 'status-banner checking';
       document.getElementById('statusLabel').textContent = 'กำลังตรวจสอบ…';
       document.getElementById('latency').textContent = '—';
+    } else if (current.status === 'slow') {
+      banner.className = 'status-banner checking';
+      document.getElementById('statusLabel').textContent = 'ระบบช้าผิดปกติ';
+      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
+    } else if (current.status === 'degraded') {
+      banner.className = 'status-banner down';
+      document.getElementById('statusLabel').textContent = 'ระบบมีปัญหา (' + current.statusCode + ')';
+      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
     } else if (current.up) {
       banner.className = 'status-banner up';
       document.getElementById('statusLabel').textContent = 'ระบบทำงานปกติ';
@@ -308,11 +316,13 @@
     if (!incidents.length) {
       list.innerHTML = '<div class="no-incidents">ไม่มีเหตุการณ์ที่บันทึกไว้</div>';
     } else {
-      list.innerHTML = [...incidents].sort((a,b) => b.start-a.start).slice(0,10).map(inc => `
+      const typeLabel = { down: 'เซิร์ฟเวอร์ไม่ตอบสนอง', degraded: 'เซิร์ฟเวอร์ตอบกลับผิดปกติ', slow: 'ระบบช้าผิดปกติ' };
+    const typeColor = { down: '#ef4444', degraded: '#f59e0b', slow: '#f59e0b' };
+    list.innerHTML = [...incidents].sort((a,b) => b.start-a.start).slice(0,10).map(inc => `
         <div class="incident-item">
-          <div class="inc-dot down"></div>
+          <div class="inc-dot" style="background:${typeColor[inc.type]||'#ef4444'}"></div>
           <div>
-            <div class="inc-title">เซิร์ฟเวอร์ไม่ตอบสนอง ${fmtDuration(inc.end-inc.start)}</div>
+            <div class="inc-title">${typeLabel[inc.type]||'เหตุการณ์ผิดปกติ'} ${fmtDuration(inc.end-inc.start)}</div>
             <div class="inc-sub">${fmtDate(inc.start)} · ${fmtTime(inc.start)} · แก้ไขแล้ว</div>
           </div>
         </div>`).join('');

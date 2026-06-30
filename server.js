@@ -9,6 +9,7 @@ const HIST_FILE  = path.join(DATA_DIR, 'history.json');
 const TARGET_URL = 'https://voidsector.net/__health';
 const CHECK_MS   = 60_000;
 const MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+const SLOW_MS    = 2000; // threshold for "slow" incident
 
 // ── Persistence ──────────────────────────────────────────────
 function loadData() {
@@ -41,12 +42,14 @@ function pruneOld() {
 }
 
 const state = loadData();
-let current = { up: null, ms: null, ts: null };
-let _downStart = null;
+let current = { up: null, ms: null, ts: null, status: null };
+let _downStart  = null;
+let _slowStart  = null;
 
-// restore ongoing incident if last check was down
+// restore ongoing incident state from last check
 const last = state.checks[state.checks.length - 1];
-if (last && !last.up) _downStart = last.ts;
+if (last && !last.up)                        _downStart = last.ts;
+if (last && last.up && last.ms > SLOW_MS)    _slowStart = last.ts;
 
 // ── Ping ─────────────────────────────────────────────────────
 function ping() {
@@ -54,28 +57,48 @@ function ping() {
   const req = https.get(TARGET_URL, { timeout: 8000 }, res => {
     const ms = Date.now() - start;
     const up = res.statusCode >= 200 && res.statusCode < 400;
+    const statusCode = res.statusCode;
     res.resume();
-    record(up, ms);
+    record(up, ms, statusCode);
   });
-  req.on('error', () => record(false, null));
-  req.on('timeout', () => { req.destroy(); record(false, null); });
+  req.on('error', () => record(false, null, null));
+  req.on('timeout', () => { req.destroy(); record(false, null, null); });
 }
 
-function record(up, ms) {
+function record(up, ms, statusCode) {
   const ts = Date.now();
-  current = { up, ms, ts };
-  state.checks.push({ ts, up, ms });
+  // determine state: 'up', 'down', 'degraded' (bad status), 'slow' (high latency)
+  let status = 'up';
+  if (!up) {
+    status = statusCode !== null ? 'degraded' : 'down';
+  } else if (ms > SLOW_MS) {
+    status = 'slow';
+  }
 
+  current = { up, ms, ts, status, statusCode };
+  state.checks.push({ ts, up, ms, status, statusCode });
+
+  // down incident
   if (!up && _downStart === null) {
     _downStart = ts;
   } else if (up && _downStart !== null) {
-    state.incidents.push({ start: _downStart, end: ts });
+    state.incidents.push({ type: status === 'degraded' ? 'degraded' : 'down', start: _downStart, end: ts });
     _downStart = null;
+  }
+
+  // slow incident
+  if (up && ms > SLOW_MS && _slowStart === null) {
+    _slowStart = ts;
+  } else if (up && ms <= SLOW_MS && _slowStart !== null) {
+    state.incidents.push({ type: 'slow', start: _slowStart, end: ts });
+    _slowStart = null;
+  } else if (!up && _slowStart !== null) {
+    _slowStart = null;
   }
 
   pruneOld();
   saveData();
-  console.log(`[${new Date().toISOString()}] ${up ? 'UP' : 'DOWN'} ${ms != null ? ms + 'ms' : 'timeout'}`);
+  console.log(`[${new Date().toISOString()}] ${status.toUpperCase()} ${ms != null ? ms + 'ms' : 'timeout'} ${statusCode || ''}`);
 }
 
 ping();
