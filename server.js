@@ -109,7 +109,7 @@ http.createServer((req, res) => {
 
   if (req.url === '/api/status') {
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'public, max-age=55');
+    res.setHeader('Cache-Control', 'no-store');
     res.end(JSON.stringify({ current, checks: state.checks, incidents: state.incidents }));
     return;
   }
