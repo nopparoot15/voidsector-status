@@ -263,10 +263,30 @@
     } else if (current.status === 'slow') {
       banner.className = 'status-banner checking';
       document.getElementById('statusLabel').textContent = 'ระบบช้าผิดปกติ';
-      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
-    } else if (current.status === 'degraded') {
+      document.getElementById('latency').textContent = current.ms + ' ms';
+    } else if (current.status === 'ssl') {
       banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'ระบบมีปัญหา (' + current.statusCode + ')';
+      document.getElementById('statusLabel').textContent = 'SSL มีปัญหา';
+      document.getElementById('latency').textContent = '—';
+    } else if (current.status === 'dns') {
+      banner.className = 'status-banner down';
+      document.getElementById('statusLabel').textContent = 'DNS ล้มเหลว';
+      document.getElementById('latency').textContent = '—';
+    } else if (current.status === 'refused') {
+      banner.className = 'status-banner down';
+      document.getElementById('statusLabel').textContent = 'เซิร์ฟเวอร์ปฏิเสธการเชื่อมต่อ';
+      document.getElementById('latency').textContent = '—';
+    } else if (current.status === 'reset') {
+      banner.className = 'status-banner down';
+      document.getElementById('statusLabel').textContent = 'การเชื่อมต่อถูกตัด';
+      document.getElementById('latency').textContent = '—';
+    } else if (current.status === 'error5xx') {
+      banner.className = 'status-banner down';
+      document.getElementById('statusLabel').textContent = 'เซิร์ฟเวอร์เกิดข้อผิดพลาด (' + current.statusCode + ')';
+      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
+    } else if (current.status === 'error4xx') {
+      banner.className = 'status-banner checking';
+      document.getElementById('statusLabel').textContent = 'ตอบกลับผิดปกติ (' + current.statusCode + ')';
       document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
     } else if (current.up) {
       banner.className = 'status-banner up';
@@ -316,8 +336,23 @@
     if (!incidents.length) {
       list.innerHTML = '<div class="no-incidents">ไม่มีเหตุการณ์ที่บันทึกไว้</div>';
     } else {
-      const typeLabel = { down: 'เซิร์ฟเวอร์ไม่ตอบสนอง', degraded: 'เซิร์ฟเวอร์ตอบกลับผิดปกติ', slow: 'ระบบช้าผิดปกติ' };
-    const typeColor = { down: '#ef4444', degraded: '#f59e0b', slow: '#f59e0b' };
+      const typeLabel = {
+      down:     'เซิร์ฟเวอร์ไม่ตอบสนอง',
+      timeout:  'เซิร์ฟเวอร์ไม่ตอบสนอง (timeout)',
+      dns:      'DNS ล้มเหลว',
+      refused:  'เซิร์ฟเวอร์ปฏิเสธการเชื่อมต่อ',
+      reset:    'การเชื่อมต่อถูกตัด',
+      ssl:      'ใบรับรอง SSL มีปัญหา',
+      error5xx: 'เซิร์ฟเวอร์เกิดข้อผิดพลาด (5xx)',
+      error4xx: 'เซิร์ฟเวอร์ตอบกลับผิดปกติ (4xx)',
+      slow:     'ระบบช้าผิดปกติ (>2s)',
+    };
+    const typeColor = {
+      down: '#ef4444', timeout: '#ef4444', refused: '#ef4444', reset: '#ef4444',
+      dns: '#a855f7', ssl: '#a855f7',
+      error5xx: '#ef4444', error4xx: '#f59e0b',
+      slow: '#f59e0b',
+    };
     list.innerHTML = [...incidents].sort((a,b) => b.start-a.start).slice(0,10).map(inc => `
         <div class="incident-item">
           <div class="inc-dot" style="background:${typeColor[inc.type]||'#ef4444'}"></div>
