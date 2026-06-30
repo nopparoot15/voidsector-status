@@ -57,20 +57,29 @@ function ping() {
   const req = https.get(TARGET_URL, { timeout: 8000 }, res => {
     const ms = Date.now() - start;
     const up = res.statusCode >= 200 && res.statusCode < 400;
-    const statusCode = res.statusCode;
     res.resume();
-    record(up, ms, statusCode);
+    record(up, ms, res.statusCode, null);
   });
-  req.on('error', () => record(false, null, null));
-  req.on('timeout', () => { req.destroy(); record(false, null, null); });
+  req.on('error', e => {
+    let errType = 'down';
+    if (e.code === 'ENOTFOUND' || e.code === 'EAI_AGAIN')           errType = 'dns';
+    else if (e.code === 'ECONNREFUSED')                              errType = 'refused';
+    else if (e.code === 'ECONNRESET' || e.code === 'ECONNABORTED')  errType = 'reset';
+    else if (e.code && e.code.startsWith('ERR_TLS'))                errType = 'ssl';
+    else if (e.code && e.code.includes('CERT'))                     errType = 'ssl';
+    record(false, null, null, errType);
+  });
+  req.on('timeout', () => { req.destroy(); record(false, null, null, 'timeout'); });
 }
 
-function record(up, ms, statusCode) {
+function record(up, ms, statusCode, errType) {
   const ts = Date.now();
-  // determine state: 'up', 'down', 'degraded' (bad status), 'slow' (high latency)
   let status = 'up';
   if (!up) {
-    status = statusCode !== null ? 'degraded' : 'down';
+    if (errType)                status = errType;       // dns, refused, reset, ssl, timeout
+    else if (statusCode >= 500) status = 'error5xx';
+    else if (statusCode >= 400) status = 'error4xx';
+    else                        status = 'down';
   } else if (ms > SLOW_MS) {
     status = 'slow';
   }
@@ -78,27 +87,25 @@ function record(up, ms, statusCode) {
   current = { up, ms, ts, status, statusCode };
   state.checks.push({ ts, up, ms, status, statusCode });
 
-  // down incident
+  // down/degraded incident tracking
   if (!up && _downStart === null) {
     _downStart = ts;
   } else if (up && _downStart !== null) {
-    state.incidents.push({ type: status === 'degraded' ? 'degraded' : 'down', start: _downStart, end: ts });
+    state.incidents.push({ type: state.checks.filter(c => c.ts >= _downStart && !c.up).map(c => c.status)[0] || 'down', start: _downStart, end: ts });
     _downStart = null;
   }
 
-  // slow incident
+  // slow incident tracking
   if (up && ms > SLOW_MS && _slowStart === null) {
     _slowStart = ts;
-  } else if (up && ms <= SLOW_MS && _slowStart !== null) {
+  } else if (((up && ms <= SLOW_MS) || !up) && _slowStart !== null) {
     state.incidents.push({ type: 'slow', start: _slowStart, end: ts });
-    _slowStart = null;
-  } else if (!up && _slowStart !== null) {
     _slowStart = null;
   }
 
   pruneOld();
   saveData();
-  console.log(`[${new Date().toISOString()}] ${status.toUpperCase()} ${ms != null ? ms + 'ms' : 'timeout'} ${statusCode || ''}`);
+  console.log(`[${new Date().toISOString()}] ${status.toUpperCase()} ${ms != null ? ms + 'ms' : ''} ${statusCode || ''}`);
 }
 
 ping();
