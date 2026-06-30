@@ -219,7 +219,7 @@
     </div>
   </div>
 
-  <button class="refresh-btn" onclick="check()">↻ ตรวจสอบอีกครั้ง</button>
+  <button class="refresh-btn" onclick="check(true)">↻ ตรวจสอบอีกครั้ง</button>
 
 </div>
 <div class="footer">ตรวจสอบอัตโนมัติทุก 60 วินาที</div>
@@ -320,9 +320,9 @@
     }
   }
 
-  async function check() {
+  async function check(force = false) {
     try {
-      const data = await fetch('/api/status', { cache: 'no-store' }).then(r => r.json());
+      const data = await fetch('/api/status', { cache: force ? 'no-store' : 'default' }).then(r => r.json());
       checks    = data.checks    || [];
       incidents = data.incidents || [];
       render(data.current || { up: null, ms: null, ts: null });
