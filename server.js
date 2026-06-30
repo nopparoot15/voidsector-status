@@ -89,11 +89,27 @@ const MIME = {
   '.ico':  'image/x-icon',
 };
 
+// simple in-memory rate limiter: max 30 req/min per IP
+const _rl = new Map();
+function rateLimit(ip) {
+  const now = Date.now();
+  const entry = _rl.get(ip) || { count: 0, reset: now + 60000 };
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + 60000; }
+  entry.count++;
+  _rl.set(ip, entry);
+  if (_rl.size > 5000) { for (const [k,v] of _rl) { if (Date.now() > v.reset) _rl.delete(k); } }
+  return entry.count > 30;
+}
+
 http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+  if (rateLimit(ip)) { res.writeHead(429); res.end('Too Many Requests'); return; }
+
   if (req.url === '/api/status') {
     res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'public, max-age=55');
     res.end(JSON.stringify({ current, checks: state.checks, incidents: state.incidents }));
     return;
   }
