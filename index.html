@@ -225,195 +225,113 @@
 <div class="footer">ตรวจสอบอัตโนมัติทุก 60 วินาที</div>
 
 <script>
-  const CHECKS_KEY   = 'vs_checks_v2';
-  const INCIDENT_KEY = 'vs_incidents_v2';
-  const MAX_AGE_DAYS = 90;
-  const CHECK_MS     = 60000;
-
-  // {ts: number, up: bool, ms: number|null}[]
-  let checks    = JSON.parse(localStorage.getItem(CHECKS_KEY) || '[]');
-  let incidents = JSON.parse(localStorage.getItem(INCIDENT_KEY) || '[]');
-
-  function saveChecks() {
-    const cutoff = Date.now() - MAX_AGE_DAYS * 86400000;
-    checks = checks.filter(c => c.ts >= cutoff);
-    localStorage.setItem(CHECKS_KEY, JSON.stringify(checks));
-  }
-
-  function saveIncidents() {
-    const cutoff = Date.now() - MAX_AGE_DAYS * 86400000;
-    incidents = incidents.filter(i => i.end >= cutoff);
-    localStorage.setItem(INCIDENT_KEY, JSON.stringify(incidents));
-  }
-
-  function uptimePct(windowMs) {
-    const cutoff = Date.now() - windowMs;
-    const sub = checks.filter(c => c.ts >= cutoff);
-    if (!sub.length) return null;
-    const up = sub.filter(c => c.up).length;
-    return (up / sub.length * 100);
-  }
+  const CHECK_MS = 60000;
+  let checks = [], incidents = [];
 
   function fmtPct(p) {
     if (p === null) return '—';
     return p.toFixed(p === 100 ? 0 : 1) + '%';
   }
-
   function pctClass(p) {
     if (p === null) return '';
-    if (p >= 99.5) return 'good';
-    if (p >= 95)   return 'warn';
-    return 'bad';
+    return p >= 99.5 ? 'good' : p >= 95 ? 'warn' : 'bad';
   }
-
+  function uptimePct(windowMs) {
+    const cutoff = Date.now() - windowMs;
+    const sub = checks.filter(c => c.ts >= cutoff);
+    if (!sub.length) return null;
+    return sub.filter(c => c.up).length / sub.length * 100;
+  }
   function fmtDate(ts) {
     const d = new Date(ts);
     return `${d.getDate()} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]} ${d.getFullYear()+543}`;
   }
-
   function fmtTime(ts) {
     return new Date(ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
   }
-
   function fmtDuration(ms) {
     if (ms < 60000)   return `${Math.round(ms/1000)} วินาที`;
     if (ms < 3600000) return `${Math.round(ms/60000)} นาที`;
     return `${(ms/3600000).toFixed(1)} ชั่วโมง`;
   }
 
-  function renderHistory() {
-    const bar = document.getElementById('histBar');
-    bar.innerHTML = '';
-    const now = Date.now();
-    // build 90 buckets (one per day, oldest first)
-    const days = [];
-    for (let i = 89; i >= 0; i--) {
-      const start = now - (i + 1) * 86400000;
-      const end   = now - i * 86400000;
-      const sub   = checks.filter(c => c.ts >= start && c.ts < end);
-      days.push(sub);
-    }
-
-    let totalUp = 0, totalAll = 0;
-    days.forEach(sub => {
-      const el = document.createElement('div');
-      el.className = 'day';
-      if (sub.length === 0) {
-        el.className += '';
-      } else {
-        const up = sub.filter(c => c.up).length;
-        const pct = up / sub.length;
-        totalUp  += up;
-        totalAll += sub.length;
-        if (pct >= 0.99)      el.classList.add('up');
-        else if (pct > 0)     el.classList.add('partial');
-        else                  el.classList.add('down');
-        const upPct = (pct * 100).toFixed(1);
-        el.title = `${upPct}% uptime`;
-      }
-      bar.appendChild(el);
-    });
-
-    const p90 = totalAll ? (totalUp / totalAll * 100) : null;
-    document.getElementById('histUptime90').textContent = p90 !== null ? fmtPct(p90) + ' uptime' : '—';
-  }
-
-  function renderMetrics() {
-    const p24 = uptimePct(86400000);
-    const p7  = uptimePct(7  * 86400000);
-    const p30 = uptimePct(30 * 86400000);
-    const el24 = document.getElementById('up24');
-    const el7  = document.getElementById('up7');
-    const el30 = document.getElementById('up30');
-    el24.textContent = fmtPct(p24); el24.className = 'metric-value ' + pctClass(p24);
-    el7.textContent  = fmtPct(p7);  el7.className  = 'metric-value ' + pctClass(p7);
-    el30.textContent = fmtPct(p30); el30.className = 'metric-value ' + pctClass(p30);
-  }
-
-  function renderIncidents() {
-    const list = document.getElementById('incidentList');
-    if (!incidents.length) {
-      list.innerHTML = '<div class="no-incidents">ไม่มีเหตุการณ์ที่บันทึกไว้</div>';
-      return;
-    }
-    const sorted = [...incidents].sort((a, b) => b.start - a.start).slice(0, 10);
-    list.innerHTML = sorted.map(inc => {
-      const dur = fmtDuration(inc.end - inc.start);
-      const dateStr = fmtDate(inc.start);
-      const timeStr = fmtTime(inc.start);
-      return `<div class="incident-item">
-        <div class="inc-dot down"></div>
-        <div>
-          <div class="inc-title">เซิร์ฟเวอร์ไม่ตอบสนอง ${dur}</div>
-          <div class="inc-sub">${dateStr} · ${timeStr} · แก้ไขแล้ว</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  let _wasDown = false;
-  let _downStart = null;
-
-  async function check() {
+  function render(current) {
     const banner = document.getElementById('banner');
-    banner.className = 'status-banner checking';
-    document.getElementById('statusLabel').textContent = 'กำลังตรวจสอบ…';
-
-    const start = Date.now();
-    let up = false, ms = null;
-
-    try {
-      const res = await Promise.race([
-        fetch('https://voidsector.net/__health', { cache: 'no-store' }),
-        new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000))
-      ]);
-      ms = Date.now() - start;
-      up = res.ok;
-    } catch { ms = null; up = false; }
-
-    const now = Date.now();
-    checks.push({ ts: now, up, ms });
-    saveChecks();
-
-    // incident tracking
-    if (!up && !_wasDown) {
-      _wasDown = true;
-      _downStart = now;
-    } else if (up && _wasDown) {
-      _wasDown = false;
-      if (_downStart) {
-        incidents.push({ start: _downStart, end: now });
-        saveIncidents();
-        _downStart = null;
-      }
-    }
-
-    // UI
-    if (up) {
+    if (current.up === null) {
+      banner.className = 'status-banner checking';
+      document.getElementById('statusLabel').textContent = 'กำลังตรวจสอบ…';
+      document.getElementById('latency').textContent = '—';
+    } else if (current.up) {
       banner.className = 'status-banner up';
       document.getElementById('statusLabel').textContent = 'ระบบทำงานปกติ';
-      document.getElementById('latency').textContent = ms + ' ms';
+      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
     } else {
       banner.className = 'status-banner down';
       document.getElementById('statusLabel').textContent = 'ระบบขัดข้อง';
       document.getElementById('latency').textContent = '—';
     }
+    if (current.ts) {
+      document.getElementById('lastCheck').textContent =
+        'ตรวจสอบล่าสุด ' + new Date(current.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
 
-    document.getElementById('lastCheck').textContent =
-      'ตรวจสอบล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // metrics
+    const p24 = uptimePct(86400000), p7 = uptimePct(7*86400000), p30 = uptimePct(30*86400000);
+    const el24 = document.getElementById('up24'), el7 = document.getElementById('up7'), el30 = document.getElementById('up30');
+    el24.textContent = fmtPct(p24); el24.className = 'metric-value ' + pctClass(p24);
+    el7.textContent  = fmtPct(p7);  el7.className  = 'metric-value ' + pctClass(p7);
+    el30.textContent = fmtPct(p30); el30.className = 'metric-value ' + pctClass(p30);
 
-    renderMetrics();
-    renderHistory();
-    renderIncidents();
+    // history bar
+    const bar = document.getElementById('histBar');
+    bar.innerHTML = '';
+    const now = Date.now();
+    let totalUp = 0, totalAll = 0;
+    for (let i = 89; i >= 0; i--) {
+      const start = now - (i+1)*86400000, end = now - i*86400000;
+      const sub = checks.filter(c => c.ts >= start && c.ts < end);
+      const el = document.createElement('div');
+      el.className = 'day';
+      if (sub.length) {
+        const up = sub.filter(c => c.up).length;
+        const pct = up / sub.length;
+        totalUp += up; totalAll += sub.length;
+        el.classList.add(pct >= 0.99 ? 'up' : pct > 0 ? 'partial' : 'down');
+        el.title = (pct*100).toFixed(1) + '% uptime';
+      }
+      bar.appendChild(el);
+    }
+    const p90 = totalAll ? totalUp/totalAll*100 : null;
+    document.getElementById('histUptime90').textContent = p90 !== null ? fmtPct(p90) + ' uptime' : '—';
+
+    // incidents
+    const list = document.getElementById('incidentList');
+    if (!incidents.length) {
+      list.innerHTML = '<div class="no-incidents">ไม่มีเหตุการณ์ที่บันทึกไว้</div>';
+    } else {
+      list.innerHTML = [...incidents].sort((a,b) => b.start-a.start).slice(0,10).map(inc => `
+        <div class="incident-item">
+          <div class="inc-dot down"></div>
+          <div>
+            <div class="inc-title">เซิร์ฟเวอร์ไม่ตอบสนอง ${fmtDuration(inc.end-inc.start)}</div>
+            <div class="inc-sub">${fmtDate(inc.start)} · ${fmtTime(inc.start)} · แก้ไขแล้ว</div>
+          </div>
+        </div>`).join('');
+    }
   }
 
-  // init from stored state
-  const lastCheck = checks[checks.length - 1];
-  if (lastCheck && !lastCheck.up) { _wasDown = true; _downStart = lastCheck.ts; }
+  async function check() {
+    try {
+      const data = await fetch('/api/status', { cache: 'no-store' }).then(r => r.json());
+      checks    = data.checks    || [];
+      incidents = data.incidents || [];
+      render(data.current || { up: null, ms: null, ts: null });
+    } catch {
+      render({ up: false, ms: null, ts: Date.now() });
+    }
+  }
 
-  renderMetrics();
-  renderHistory();
-  renderIncidents();
+  render({ up: null, ms: null, ts: null });
   check();
   setInterval(check, CHECK_MS);
 </script>
