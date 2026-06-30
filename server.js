@@ -98,6 +98,21 @@ http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && req.url === '/api/clear') {
+    const secret = process.env.CLEAR_SECRET;
+    if (!secret || req.headers['x-clear-secret'] !== secret) {
+      res.writeHead(403); res.end(JSON.stringify({ ok: false, error: 'forbidden' })); return;
+    }
+    state.checks    = [];
+    state.incidents = [];
+    current         = { up: null, ms: null, ts: null };
+    _downStart      = null;
+    saveData();
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
   // static files
   let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
   const ext = path.extname(filePath);
