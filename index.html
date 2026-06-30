@@ -363,12 +363,12 @@
     let up = false, ms = null;
 
     try {
-      await Promise.race([
-        fetch('https://voidsector.net/favicon.ico', { mode: 'no-cors', cache: 'no-store' }),
+      const res = await Promise.race([
+        fetch('https://voidsector.net/__health', { cache: 'no-store' }),
         new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000))
       ]);
       ms = Date.now() - start;
-      up = true;
+      up = res.ok;
     } catch { ms = null; up = false; }
 
     const now = Date.now();
