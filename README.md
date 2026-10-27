@@ -22,3 +22,10 @@ In the Worker's editor add `200` to the `DOWN` set, Deploy, reload voidsector.ne
 Real test: stop `cloudflared` on the Mac for a minute, or turn the Mac off.
 
 Only `voidsector.net` and `www` are covered; add routes the same way for other hostnames.
+
+## Editing the page
+
+The Worker reads `index.html` from this repo (`main`) when it needs to show the page, cached at the edge for 5 minutes.
+So **changing the page = edit `index.html` and push**; nothing to paste into Cloudflare.
+`worker/worker.js` (built by `node build.mjs`) still carries a fallback copy of the page for when GitHub can't be reached;
+re-paste it into Cloudflare only when the Worker's own logic (`worker/worker.template.js`) changes.
