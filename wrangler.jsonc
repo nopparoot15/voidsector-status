@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers Builds deploys this on every push to main (build: `npm ci && npm run build`, deploy: `npx wrangler deploy`).
+  // The name must match the Worker's name in Cloudflare.
+  "name": "voidsector-status",
+  "main": "worker/worker.js",
+  "compatibility_date": "2025-01-01",
+  // Not reachable on a *.workers.dev address: the maintenance page may only appear when voidsector.net is really down.
+  "workers_dev": false,
+  "preview_urls": false
+  // Routes (voidsector.net/* and www.voidsector.net/*, failure mode "Fail open") are set in the Cloudflare dashboard, see README.md.
+}

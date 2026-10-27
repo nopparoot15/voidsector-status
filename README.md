@@ -35,3 +35,9 @@ re-paste it into Cloudflare only when the Worker's own logic (`worker/worker.tem
 The page is written with Tailwind classes in `src/page.html`. `npm install` once, then `npm run build` compiles the CSS and inlines it into
 `index.html` (no CDN needed at runtime) and rebuilds `worker/worker.js`. Edit `src/page.html`, build, commit **both** `src/page.html` and the
 generated `index.html`, push.
+
+## Deploy (Cloudflare Workers Builds)
+
+The Worker `voidsector-status` is connected to this repo: every push to `main` runs the build (`npm ci && npm run build`) and
+`npx wrangler deploy` (config: `wrangler.jsonc`). Routes are not in the config; they are set on the Worker in the dashboard
+(Settings → Domains & Routes): `voidsector.net/*` and `www.voidsector.net/*`, failure mode **Fail open**.
