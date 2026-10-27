@@ -29,3 +29,9 @@ The Worker reads `index.html` from this repo (`main`) when it needs to show the 
 So **changing the page = edit `index.html` and push**; nothing to paste into Cloudflare.
 `worker/worker.js` (built by `node build.mjs`) still carries a fallback copy of the page for when GitHub can't be reached;
 re-paste it into Cloudflare only when the Worker's own logic (`worker/worker.template.js`) changes.
+
+## Building (Tailwind)
+
+The page is written with Tailwind classes in `src/page.html`. `npm install` once, then `npm run build` compiles the CSS and inlines it into
+`index.html` (no CDN needed at runtime) and rebuilds `worker/worker.js`. Edit `src/page.html`, build, commit **both** `src/page.html` and the
+generated `index.html`, push.

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="th" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#07070f">
+<title>VoidSector — ปิดปรับปรุง</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230d0d14'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2379f7ff'/><stop offset='1' stop-color='%23a78bfa'/></linearGradient></defs><text x='50' y='68' font-family='system-ui,Arial,sans-serif' font-weight='900' font-size='46' text-anchor='middle' letter-spacing='-2' fill='url(%23g)'>VS</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("vs-theme")||"dark")}catch(e){}</script>
+<style>/*__CSS__*/</style>
+</head>
+<body class="relative flex min-h-screen min-h-[100dvh] flex-col overflow-x-hidden bg-[#f0f2f5] font-sans text-[15px] leading-relaxed text-[#1c1e21] transition-colors dark:bg-vs-bg dark:text-[#f1f1f8]">
+
+<!-- backdrop -->
+<div class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+  <div class="absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-[110px] motion-safe:animate-drift dark:bg-indigo-500/25"></div>
+  <div class="absolute -bottom-48 -right-24 h-[420px] w-[520px] rounded-full bg-fuchsia-500/10 blur-[110px] dark:bg-purple-500/15"></div>
+  <div class="absolute -bottom-40 -left-32 h-[380px] w-[460px] rounded-full bg-cyan-500/10 blur-[110px] dark:bg-cyan-500/10"></div>
+  <div class="absolute inset-0 opacity-60 [mask-image:radial-gradient(ellipse_70%_55%_at_50%_35%,#000,transparent)] [background-image:linear-gradient(to_right,rgba(99,102,241,.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,.10)_1px,transparent_1px)] [background-size:44px_44px] dark:opacity-40"></div>
+</div>
+
+<!-- top bar -->
+<header class="relative z-10 flex h-14 items-center justify-between border-b border-[#dadde1] bg-white/80 px-5 backdrop-blur-xl dark:border-vs-line dark:bg-vs-surface/70">
+  <div class="flex items-center gap-2.5 text-[17px] font-extrabold tracking-tight">
+    <span class="grid h-[30px] w-[30px] place-items-center rounded-lg border border-indigo-500/30 bg-white text-[12px] font-black tracking-tighter dark:border-cyan-300/25 dark:bg-[#0d0d14] dark:bg-gradient-to-br dark:from-cyan-300/15 dark:to-violet-400/15"><b class="bg-gradient-to-br from-indigo-600 to-purple-500 bg-clip-text font-black text-transparent dark:from-cyan-300 dark:to-violet-400">VS</b></span>
+    VoidSector
+  </div>
+  <button id="theme" type="button" aria-label="สลับธีม" class="grid h-9 w-9 place-items-center rounded-xl border border-[#dadde1] bg-white text-[#606770] transition hover:bg-[#f5f6f8] hover:text-[#1c1e21] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-vs-line dark:bg-white/5 dark:text-[#a1a1b5] dark:hover:bg-white/10 dark:hover:text-white">
+    <svg class="hidden h-[18px] w-[18px] dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    <svg class="h-[18px] w-[18px] dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+</header>
+
+<main class="relative z-10 grid flex-1 place-items-center px-4 pb-10 pt-8">
+  <section aria-labelledby="t" class="relative w-full max-w-[520px] overflow-hidden rounded-[28px] border border-[#dadde1] bg-white/90 px-6 pb-7 pt-12 text-center shadow-[0_30px_70px_-30px_rgba(99,102,241,.35)] backdrop-blur-md sm:px-10 dark:border-vs-line dark:bg-vs-card dark:bg-gradient-to-b dark:from-[#181928]/80 dark:to-vs-card/80 dark:shadow-[0_30px_80px_-30px_rgba(99,102,241,.5)]">
+    <div class="absolute left-1/2 top-0 h-px w-3/5 -translate-x-1/2 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"></div>
+    <div class="absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden="true"></div>
+
+    <div class="relative mx-auto mb-7 grid h-[84px] w-[84px] place-items-center motion-safe:animate-floaty" aria-hidden="true">
+      <span class="absolute inset-0 rounded-[26px] bg-gradient-to-br from-indigo-500 to-purple-500 opacity-30 blur-xl"></span>
+      <span class="relative grid h-full w-full place-items-center rounded-[26px] border border-indigo-500/30 bg-gradient-to-br from-indigo-500/15 to-purple-500/10 text-[30px] font-black tracking-tighter shadow-[inset_0_1px_0_rgba(255,255,255,.35)] dark:border-indigo-300/30 dark:from-indigo-500/25 dark:to-purple-500/15 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.1)]"><b class="bg-gradient-to-br from-indigo-600 to-purple-500 bg-clip-text font-black text-transparent dark:from-cyan-300 dark:to-violet-400">VS</b></span>
+    </div>
+
+    <h1 id="t" class="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-500 bg-clip-text pb-1 text-[clamp(30px,8vw,40px)] font-extrabold leading-tight tracking-tight text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-purple-300">ปิดปรับปรุง</h1>
+    <p class="mx-auto mt-2 max-w-[32ch] text-[15.5px] text-[#606770] dark:text-[#a1a1b5]">ตอนนี้เว็บกำลังปิดปรับปรุงชั่วคราว ลองใหม่ภายหลัง แล้วเราจะกลับมาเร็วๆ นี้</p>
+
+    <div id="stWrap" role="status" aria-live="polite" class="group mx-auto mt-7 inline-flex max-w-full items-center gap-2.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-[13.5px] font-medium text-amber-700 transition-colors data-[ok]:border-emerald-500/30 data-[ok]:bg-emerald-500/10 data-[ok]:text-emerald-700 dark:text-amber-300 dark:data-[ok]:text-emerald-300">
+      <span class="relative h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500 group-data-[ok]:bg-emerald-500" aria-hidden="true"><span class="absolute inset-0 rounded-full bg-amber-500 motion-safe:animate-ping2 group-data-[ok]:bg-emerald-500"></span></span>
+      <span id="st">กำลังตรวจสอบสถานะ…</span>
+    </div>
+
+    <div class="mt-7">
+      <button id="retry" type="button" class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 px-7 text-[15px] font-semibold text-white shadow-[0_10px_28px_-10px_rgba(99,102,241,.8)] transition hover:-translate-y-px hover:brightness-110 active:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 sm:w-auto">
+        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
+        ลองอีกครั้ง
+      </button>
+    </div>
+
+    <div class="mt-8 border-t border-[#e6e8ec] pt-5 dark:border-vs-line">
+      <p class="text-[12.5px] font-medium text-[#8a8d91] dark:text-[#6b6b80]">ต้องการติดต่อผู้ดูแล</p>
+      <div class="mt-2 inline-flex max-w-full items-center gap-1 rounded-xl border border-[#dadde1] bg-[#f5f6fa] py-1 pl-4 pr-1 dark:border-vs-line dark:bg-black/25">
+        <a href="mailto:nopparoot147@gmail.com" class="truncate text-[14px] font-semibold text-indigo-600 hover:underline dark:text-indigo-300">nopparoot147@gmail.com</a>
+        <button id="copy" type="button" aria-label="คัดลอกอีเมล" class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-semibold text-[#606770] transition hover:bg-black/5 hover:text-[#1c1e21] dark:text-[#a1a1b5] dark:hover:bg-white/10 dark:hover:text-white">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="copyT">คัดลอก</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Shown by the Cloudflare Worker (worker/worker.js) in place of voidsector.net while the server is off. The Worker also answers
+  // /__ping on voidsector.net: 200 = the real site is back, 503 = still down. Every 30 s this page asks and reloads into the site.
+  var onSite = /(^|\.)voidsector\.net$/.test(location.hostname);
+  var st = document.getElementById('st'), wrap = document.getElementById('stWrap'), n = 0, busy = false;
+  document.getElementById('retry').addEventListener('click', function () { location.reload(); });
+  // same key and attribute the site uses (VSTheme.toggle)
+  document.getElementById('theme').addEventListener('click', function () {
+    var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('vs-theme', t); } catch (e) {}
+  });
+  document.getElementById('copy').addEventListener('click', function () {
+    var b = document.getElementById('copyT'), done = function () { b.textContent = 'คัดลอกแล้ว'; setTimeout(function () { b.textContent = 'คัดลอก'; }, 1800); };
+    try { navigator.clipboard.writeText('nopparoot147@gmail.com').then(done, function () {}); } catch (e) {}
+  });
+  if (!onSite) { st.textContent = 'ปิดปรับปรุงอยู่ในขณะนี้'; }
+  else {
+    var tick = function () {
+      if (busy) return; busy = true; n++;
+      fetch('/__ping?' + Date.now(), { cache: 'no-store' }).then(function (r) {
+        if (r.status === 200) { wrap.setAttribute('data-ok', ''); st.textContent = 'กลับมาแล้ว กำลังพาเข้าเว็บ…'; setTimeout(function () { location.reload(); }, 600); return; }
+        st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n;
+      }).catch(function () { st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n; }).then(function () { busy = false; });
+    };
+    setTimeout(tick, 5000); setInterval(tick, 30000);
+  }
+</script>
+</body>
+</html>
