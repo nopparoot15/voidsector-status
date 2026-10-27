@@ -5,30 +5,22 @@ Mac is down Cloudflare would show its own error page. A Cloudflare Worker notice
 (status 503, `noindex`). The page is built into the Worker script, so it is not hosted anywhere else: there is no address where it can be
 opened while the site is up.
 
-- `index.html` — the page (static). Checks every 30 s and reloads into the site once it is back.
+- `src/page.html` — the page source (Tailwind); `index.html` — the built page (CSS inlined). Checks every 30 s and reloads into the site once it is back.
 - `worker/worker.template.js` — the Worker source; `build.mjs` inlines `index.html` into it and writes `worker/worker.js` (what you deploy).
 
 ## Set up
-1. Cloudflare → Workers & Pages → your Worker → Edit code → paste `worker/worker.js` → Deploy. (No variables needed.)
+1. Cloudflare → Workers & Pages → Create → connect this repo (Workers Builds, see "Deploy" below). No variables needed.
 2. Settings → Domains & Routes → add routes `voidsector.net/*` and `www.voidsector.net/*`.
 3. Keep the free plan under 100,000 requests/day: add routes WITHOUT a Worker (choose "None") for the paths that are not pages —
    `voidsector.net/css/*`, `/js/*`, `/img/*`, `/uploads/*`, `/api/*`, `/socket.io/*`, `/gacha-app/*`, `/videos/*` — or use Workers Paid.
 
 ## Change the page
-Edit `index.html`, run `node build.mjs`, paste the new `worker/worker.js` into the Worker and Deploy.
+Edit `src/page.html`, run `npm run build`, commit and push: Cloudflare redeploys the Worker with the new page.
 
 ## Test without taking the site down
-In the Worker's editor add `200` to the `DOWN` set, Deploy, reload voidsector.net in a private window → this page appears (status 503). Remove the change.
 Real test: stop `cloudflared` on the Mac for a minute, or turn the Mac off.
 
 Only `voidsector.net` and `www` are covered; add routes the same way for other hostnames.
-
-## Editing the page
-
-The Worker reads `index.html` from this repo (`main`) when it needs to show the page, cached at the edge for 5 minutes.
-So **changing the page = edit `index.html` and push**; nothing to paste into Cloudflare.
-`worker/worker.js` (built by `node build.mjs`) still carries a fallback copy of the page for when GitHub can't be reached;
-re-paste it into Cloudflare only when the Worker's own logic (`worker/worker.template.js`) changes.
 
 ## Building (Tailwind)
 
