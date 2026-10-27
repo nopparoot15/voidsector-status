@@ -52,10 +52,6 @@
   .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--warn);opacity:0;animation:ping 2s ease-out infinite}
   @keyframes ping{0%{transform:scale(.6);opacity:.7}100%{transform:scale(1.5);opacity:0}}
   .status.ok .pulse{background:var(--ok)}.status.ok .pulse::after{border-color:var(--ok)}.status.ok .srow{color:#6ee7b7}
-  .track{height:3px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:11px;overflow:hidden}
-  .fill{height:100%;width:0;border-radius:3px;background:var(--grad)}
-  .fill.run{animation:fill 30s linear forwards}
-  @keyframes fill{to{width:100%}}
 
   .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);text-decoration:none;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;transition:transform .15s,background .15s,box-shadow .2s,border-color .15s}
@@ -70,7 +66,7 @@
   .btn svg{width:17px;height:17px;flex:none}
 
   @media (max-width:420px){.card{padding:36px 20px 28px;border-radius:20px}.btn{flex:1 1 100%}}
-  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}.fill.run{width:100%}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
 </style>
 </head>
 <body>
@@ -86,7 +82,6 @@
     <p class="lead">ตอนนี้เว็บกำลังปิดปรับปรุงชั่วคราว ลองใหม่ภายหลัง แล้วเราจะกลับมาเร็วๆ นี้</p>
     <div class="status" id="stWrap" role="status" aria-live="polite">
       <div class="srow"><span class="pulse" aria-hidden="true"></span><span id="st">กำลังตรวจสอบสถานะ…</span></div>
-      <div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div>
     </div>
     <div class="row">
       <button class="btn pri" id="retry" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>ลองอีกครั้ง</button>
@@ -99,19 +94,18 @@
   // Shown by the Cloudflare Worker (worker/worker.js) in place of voidsector.net while the server is off. The Worker also answers
   // /__ping on voidsector.net: 200 = the real site is back, 503 = still down. Every 30 s this page asks and reloads into the site.
   var onSite = /(^|\.)voidsector\.net$/.test(location.hostname);
-  var st = document.getElementById('st'), wrap = document.getElementById('stWrap'), fill = document.getElementById('fill'), n = 0, busy = false;
+  var st = document.getElementById('st'), wrap = document.getElementById('stWrap'), n = 0, busy = false;
   document.getElementById('retry').addEventListener('click', function () { location.reload(); });
-  function lap() { fill.classList.remove('run'); void fill.offsetWidth; fill.classList.add('run'); }
   if (!onSite) { st.textContent = 'ปิดปรับปรุงอยู่ในขณะนี้'; }
   else {
     var tick = function () {
       if (busy) return; busy = true; n++;
       fetch('/__ping?' + Date.now(), { cache: 'no-store' }).then(function (r) {
         if (r.status === 200) { wrap.className = 'status ok'; st.textContent = 'กลับมาแล้ว กำลังพาเข้าเว็บ…'; setTimeout(function () { location.reload(); }, 600); return; }
-        st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n; lap();
-      }).catch(function () { st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n; lap(); }).then(function () { busy = false; });
+        st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n;
+      }).catch(function () { st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n; }).then(function () { busy = false; });
     };
-    lap(); setTimeout(tick, 5000); setInterval(tick, 30000);
+    setTimeout(tick, 5000); setInterval(tick, 30000);
   }
 </script>
 </body>
