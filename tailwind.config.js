@@ -10,8 +10,12 @@ export default {
         ping2: { '0%': { transform: 'scale(.6)', opacity: '.7' }, '100%': { transform: 'scale(1.9)', opacity: '0' } },
         floaty: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-6px)' } },
         drift: { '0%,100%': { transform: 'translate3d(0,0,0)' }, '50%': { transform: 'translate3d(24px,-18px,0)' } },
+        drift2: { '0%,100%': { transform: 'translate3d(0,0,0) scale(1)' }, '50%': { transform: 'translate3d(-40px,26px,0) scale(1.12)' } },
+        fadeup: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        shimmer: { '0%': { backgroundPosition: '0% 50%' }, '100%': { backgroundPosition: '200% 50%' } },
+        sweep: { '0%': { transform: 'translateX(-130%) skewX(-18deg)' }, '55%,100%': { transform: 'translateX(330%) skewX(-18deg)' } },
       },
-      animation: { ping2: 'ping2 2s ease-out infinite', floaty: 'floaty 5s ease-in-out infinite', drift: 'drift 16s ease-in-out infinite' },
+      animation: { ping2: 'ping2 2s ease-out infinite', floaty: 'floaty 5s ease-in-out infinite', drift: 'drift 16s ease-in-out infinite', drift2: 'drift2 21s ease-in-out infinite', fadeup: 'fadeup .8s cubic-bezier(.2,.7,.2,1) backwards', shimmer: 'shimmer 6s linear infinite', sweep: 'sweep 4.5s ease-in-out infinite' },
     },
   },
 };

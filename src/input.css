@@ -5,3 +5,25 @@
   html { -webkit-font-smoothing: antialiased; }
   body { margin: 0; }
 }
+
+@property --a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes spin-a { to { --a: 360deg; } }
+@keyframes rise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  12% { opacity: 1; }
+  85% { opacity: .9; }
+  100% { transform: translate3d(var(--dx, 20px), -105vh, 0); opacity: 0; }
+}
+@layer components {
+  /* a light that keeps circling the card's edge */
+  .edge {
+    position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+    background: conic-gradient(from var(--a), transparent 0 62%, #818cf8 74%, #c084fc 84%, #22d3ee 93%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation: spin-a 7s linear infinite;
+  }
+  .pt { position: absolute; bottom: -12px; border-radius: 9999px; background: rgba(99, 102, 241, .55); box-shadow: 0 0 8px rgba(99, 102, 241, .6); animation: rise linear infinite; }
+  [data-theme="dark"] .pt { background: rgba(165, 180, 252, .75); box-shadow: 0 0 10px rgba(129, 140, 248, .8); }
+}
+@media (prefers-reduced-motion: reduce) { .edge { animation: none; } .pt { display: none; } }
