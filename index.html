@@ -1,383 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VoidSector Status</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0d0d0f;
-      --surface: #17171a;
-      --surface2: #1e1e22;
-      --border: rgba(255,255,255,.07);
-      --border2: rgba(255,255,255,.12);
-      --text: #e8e8ec;
-      --muted: rgba(255,255,255,.38);
-      --green: #22c55e;
-      --red: #ef4444;
-      --yellow: #f59e0b;
-      --primary: #c084fc;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px 16px 48px;
-      gap: 0;
-    }
-
-    .wrap { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
-
-    /* Header */
-    .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
-    .logo { font-size: 20px; font-weight: 700; color: var(--primary); }
-    .logo span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 6px; }
-    .last-check { font-size: 12px; color: var(--muted); }
-
-    /* Status banner */
-    .status-banner {
-      border-radius: 14px;
-      padding: 20px 22px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      transition: background .4s, border-color .4s;
-    }
-    .status-banner.up   { background: rgba(34,197,94,.08);  border: 1px solid rgba(34,197,94,.2); }
-    .status-banner.down { background: rgba(239,68,68,.08);  border: 1px solid rgba(239,68,68,.2); }
-    .status-banner.checking { background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.18); }
-
-    .s-dot {
-      width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0;
-      background: var(--yellow); transition: background .4s;
-    }
-    .up   .s-dot { background: var(--green); animation: pulse-g 2.5s ease-in-out infinite; }
-    .down .s-dot { background: var(--red);   animation: pulse-r 1.4s ease-in-out infinite; }
-
-    @keyframes pulse-g { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.45)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
-    @keyframes pulse-r { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,0)} }
-
-    .s-info { flex: 1; }
-    .s-label { font-size: 17px; font-weight: 600; }
-    .up   .s-label { color: var(--green); }
-    .down .s-label { color: var(--red); }
-    .checking .s-label { color: var(--yellow); }
-    .s-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-    .s-latency { text-align: right; }
-    .s-latency b { font-size: 15px; font-weight: 600; color: var(--text); display: block; }
-    .s-latency span { font-size: 11px; color: var(--muted); }
-
-    /* Card */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
-    .card-title { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 14px; }
-
-    /* Uptime metrics */
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .metric { background: var(--surface2); border-radius: 10px; padding: 12px 14px; }
-    .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
-    .metric-value { font-size: 22px; font-weight: 600; color: var(--text); }
-    .metric-value.good { color: var(--green); }
-    .metric-value.warn { color: var(--yellow); }
-    .metric-value.bad  { color: var(--red); }
-
-    /* History bar */
-    .history-bar { display: flex; gap: 2px; align-items: flex-end; }
-    .history-bar .day {
-      flex: 1; height: 32px; border-radius: 2px;
-      background: var(--border);
-      transition: background .2s;
-      cursor: default;
-      position: relative;
-    }
-    .history-bar .day.up   { background: rgba(34,197,94,.45); }
-    .history-bar .day.down { background: rgba(239,68,68,.6); }
-    .history-bar .day.partial { background: rgba(245,158,11,.5); }
-
-    .history-dates { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--muted); }
-
-    /* Incidents */
-    .incident-list { display: flex; flex-direction: column; gap: 10px; }
-    .incident-item { display: flex; gap: 10px; align-items: flex-start; }
-    .inc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-    .inc-dot.down { background: var(--red); }
-    .inc-title { font-size: 13px; color: var(--text); line-height: 1.4; }
-    .inc-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .no-incidents { font-size: 13px; color: var(--muted); }
-
-    /* Contact */
-    .contact-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .cbtn {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 8px 16px; border-radius: 10px; font-size: 13px;
-      font-weight: 500; text-decoration: none;
-      border: 1px solid var(--border2); color: var(--text);
-      background: var(--surface2); transition: background .15s, border-color .15s;
-      cursor: pointer;
-    }
-    .cbtn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); }
-    .cbtn svg { flex-shrink: 0; }
-
-    /* Refresh btn */
-    .refresh-btn {
-      align-self: flex-end;
-      background: none; border: 1px solid var(--border);
-      color: var(--muted); font-size: 12px;
-      padding: 5px 14px; border-radius: 8px;
-      cursor: pointer; transition: border-color .15s, color .15s;
-    }
-    .refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
-
-    .footer { margin-top: 24px; font-size: 11px; color: rgba(255,255,255,.18); }
-
-    @media (max-width: 480px) {
-      .card { padding: 16px; }
-      .metrics { gap: 6px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#07070f">
+<title>VoidSector — ปิดปรับปรุง</title>
+<style>
+  :root{--bg:#07070f;--card:#12121f;--line:rgba(255,255,255,.09);--text:#eceefb;--sub:#9a9fc0;--pri:#7c6cff;--ok:#3ddc97}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{min-height:100vh;min-height:100dvh;background:radial-gradient(1100px 560px at 50% -12%,#1c1745 0%,var(--bg) 62%);color:var(--text);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom))}
+  main{width:min(480px,100%);text-align:center}
+  .logo{font-weight:800;letter-spacing:.18em;font-size:13px;color:var(--sub);margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:36px 26px 28px}
+  .orb{width:68px;height:68px;margin:0 auto 22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c3b9ff,var(--pri) 55%,#2a2370);animation:pulse 2.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,108,255,.45)}70%{box-shadow:0 0 0 28px rgba(124,108,255,0)}100%{box-shadow:0 0 0 0 rgba(124,108,255,0)}}
+  h1{font-size:26px;line-height:1.3;margin:0 0 8px;font-weight:800}
+  p{margin:0;color:var(--sub);font-size:15px}
+  .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 20px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);text-decoration:none;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .btn:hover{background:rgba(255,255,255,.08)}
+  .btn.pri{background:var(--pri);border-color:transparent;color:#fff}
+  .btn.pri:hover{filter:brightness(1.08)}
+  .st{margin-top:22px;font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:center;justify-content:center;min-height:20px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#f5b84a;flex:none}
+  .st.ok .dot{background:var(--ok)}
+  footer{margin-top:18px;font-size:12px;color:#6d7295}
+  @media (prefers-reduced-motion:reduce){.orb{animation:none}}
+</style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="header">
-    <div class="logo">VoidSector <span>status</span></div>
-    <div class="last-check" id="lastCheck">—</div>
-  </div>
-
-  <!-- Status banner -->
-  <div class="status-banner checking" id="banner">
-    <div class="s-dot"></div>
-    <div class="s-info">
-      <div class="s-label" id="statusLabel">กำลังตรวจสอบ…</div>
-      <div class="s-sub">voidsector.net</div>
-    </div>
-    <div class="s-latency">
-      <b id="latency">—</b>
-      <span>response time</span>
-    </div>
-  </div>
-
-  <!-- Uptime -->
+<main>
+  <div class="logo">VOIDSECTOR</div>
   <div class="card">
-    <div class="card-title">uptime</div>
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-label">24 ชั่วโมง</div>
-        <div class="metric-value" id="up24">—</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">7 วัน</div>
-        <div class="metric-value" id="up7">—</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">30 วัน</div>
-        <div class="metric-value" id="up30">—</div>
-      </div>
+    <div class="orb" aria-hidden="true"></div>
+    <h1>ปิดปรับปรุง</h1>
+    <p>ตอนนี้เว็บกำลังปิดปรับปรุงชั่วคราว<br>ลองใหม่ภายหลัง แล้วเราจะกลับมาเร็วๆ นี้</p>
+    <div class="st" id="stWrap" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="st">กำลังตรวจสอบสถานะ…</span></div>
+    <div class="row">
+      <a class="btn pri" href="https://voidsector.net/" id="retry">ลองเข้าเว็บอีกครั้ง</a>
+      <a class="btn" href="https://discord.com/users/salty6ix" target="_blank" rel="noopener">ติดต่อผู้ดูแล</a>
     </div>
   </div>
-
-  <!-- 90-day history -->
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <div class="card-title" style="margin-bottom:0;">ประวัติ 90 วัน</div>
-      <div style="font-size:12px; color:var(--muted);" id="histUptime90">—</div>
-    </div>
-    <div class="history-bar" id="histBar"></div>
-    <div class="history-dates">
-      <span>90 วันที่แล้ว</span>
-      <span>วันนี้</span>
-    </div>
-  </div>
-
-  <!-- Incidents -->
-  <div class="card">
-    <div class="card-title">เหตุการณ์ล่าสุด</div>
-    <div class="incident-list" id="incidentList">
-      <div class="no-incidents">ไม่มีเหตุการณ์ที่บันทึกไว้</div>
-    </div>
-  </div>
-
-  <!-- Contact -->
-  <div class="card">
-    <div class="card-title">ติดต่อแอดมิน</div>
-    <div class="contact-btns">
-      <a class="cbtn" href="mailto:voidsector.net@gmail.com">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-        voidsector.net@gmail.com
-      </a>
-      <a class="cbtn" href="https://discord.com/users/salty6ix" target="_blank" rel="noopener">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.03.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 13.94 13.94 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.13 13.13 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-        salty6ix
-      </a>
-    </div>
-  </div>
-
-
-</div>
-<div class="footer">ตรวจสอบอัตโนมัติทุก 60 วินาที</div>
-
+  <footer>หน้านี้แสดงเมื่อเซิร์ฟเวอร์ปิดให้บริการเท่านั้น</footer>
+</main>
 <script>
-  const CHECK_MS = 60000;
-  let checks = [], incidents = [];
-
-  function fmtPct(p) {
-    if (p === null) return '—';
-    return p.toFixed(p === 100 ? 0 : 1) + '%';
-  }
-  function pctClass(p) {
-    if (p === null) return '';
-    return p >= 99.5 ? 'good' : p >= 95 ? 'warn' : 'bad';
-  }
-  function uptimePct(windowMs) {
-    const cutoff = Date.now() - windowMs;
-    const sub = checks.filter(c => c.ts >= cutoff);
-    if (!sub.length) return null;
-    return sub.filter(c => c.up).length / sub.length * 100;
-  }
-  function fmtDate(ts) {
-    const d = new Date(ts);
-    return `${d.getDate()} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]} ${d.getFullYear()+543}`;
-  }
-  function fmtTime(ts) {
-    return new Date(ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-  }
-  function fmtDuration(ms) {
-    if (ms < 60000)   return `${Math.round(ms/1000)} วินาที`;
-    if (ms < 3600000) return `${Math.round(ms/60000)} นาที`;
-    return `${(ms/3600000).toFixed(1)} ชั่วโมง`;
-  }
-
-  function render(current) {
-    const banner = document.getElementById('banner');
-    if (current.up === null) {
-      banner.className = 'status-banner checking';
-      document.getElementById('statusLabel').textContent = 'กำลังตรวจสอบ…';
-      document.getElementById('latency').textContent = '—';
-    } else if (current.status === 'slow') {
-      banner.className = 'status-banner checking';
-      document.getElementById('statusLabel').textContent = 'ระบบช้าผิดปกติ';
-      document.getElementById('latency').textContent = current.ms + ' ms';
-    } else if (current.status === 'ssl') {
-      banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'SSL มีปัญหา';
-      document.getElementById('latency').textContent = '—';
-    } else if (current.status === 'dns') {
-      banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'DNS ล้มเหลว';
-      document.getElementById('latency').textContent = '—';
-    } else if (current.status === 'refused') {
-      banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'เซิร์ฟเวอร์ปฏิเสธการเชื่อมต่อ';
-      document.getElementById('latency').textContent = '—';
-    } else if (current.status === 'reset') {
-      banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'การเชื่อมต่อถูกตัด';
-      document.getElementById('latency').textContent = '—';
-    } else if (current.status === 'error5xx') {
-      banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'เซิร์ฟเวอร์เกิดข้อผิดพลาด (' + current.statusCode + ')';
-      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
-    } else if (current.status === 'error4xx') {
-      banner.className = 'status-banner checking';
-      document.getElementById('statusLabel').textContent = 'ตอบกลับผิดปกติ (' + current.statusCode + ')';
-      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
-    } else if (current.up) {
-      banner.className = 'status-banner up';
-      document.getElementById('statusLabel').textContent = 'ระบบทำงานปกติ';
-      document.getElementById('latency').textContent = current.ms != null ? current.ms + ' ms' : '—';
-    } else {
-      banner.className = 'status-banner down';
-      document.getElementById('statusLabel').textContent = 'ระบบขัดข้อง';
-      document.getElementById('latency').textContent = '—';
-    }
-    if (current.ts) {
-      document.getElementById('lastCheck').textContent =
-        'ตรวจสอบล่าสุด ' + new Date(current.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-
-    // metrics
-    const p24 = uptimePct(86400000), p7 = uptimePct(7*86400000), p30 = uptimePct(30*86400000);
-    const el24 = document.getElementById('up24'), el7 = document.getElementById('up7'), el30 = document.getElementById('up30');
-    el24.textContent = fmtPct(p24); el24.className = 'metric-value ' + pctClass(p24);
-    el7.textContent  = fmtPct(p7);  el7.className  = 'metric-value ' + pctClass(p7);
-    el30.textContent = fmtPct(p30); el30.className = 'metric-value ' + pctClass(p30);
-
-    // history bar
-    const bar = document.getElementById('histBar');
-    bar.innerHTML = '';
-    const now = Date.now();
-    let totalUp = 0, totalAll = 0;
-    for (let i = 89; i >= 0; i--) {
-      const start = now - (i+1)*86400000, end = now - i*86400000;
-      const sub = checks.filter(c => c.ts >= start && c.ts < end);
-      const el = document.createElement('div');
-      el.className = 'day';
-      if (sub.length) {
-        const up = sub.filter(c => c.up).length;
-        const pct = up / sub.length;
-        totalUp += up; totalAll += sub.length;
-        el.classList.add(pct >= 0.99 ? 'up' : pct > 0 ? 'partial' : 'down');
-        el.title = (pct*100).toFixed(1) + '% uptime';
-      }
-      bar.appendChild(el);
-    }
-    const p90 = totalAll ? totalUp/totalAll*100 : null;
-    document.getElementById('histUptime90').textContent = p90 !== null ? fmtPct(p90) + ' uptime' : '—';
-
-    // incidents
-    const list = document.getElementById('incidentList');
-    if (!incidents.length) {
-      list.innerHTML = '<div class="no-incidents">ไม่มีเหตุการณ์ที่บันทึกไว้</div>';
-    } else {
-      const typeLabel = {
-      down:     'เซิร์ฟเวอร์ไม่ตอบสนอง',
-      timeout:  'เซิร์ฟเวอร์ไม่ตอบสนอง (timeout)',
-      dns:      'DNS ล้มเหลว',
-      refused:  'เซิร์ฟเวอร์ปฏิเสธการเชื่อมต่อ',
-      reset:    'การเชื่อมต่อถูกตัด',
-      ssl:      'ใบรับรอง SSL มีปัญหา',
-      error5xx: 'เซิร์ฟเวอร์เกิดข้อผิดพลาด (5xx)',
-      error4xx: 'เซิร์ฟเวอร์ตอบกลับผิดปกติ (4xx)',
-      slow:     'ระบบช้าผิดปกติ (>2s)',
+  // Shown by the Cloudflare Worker (worker/worker.js) in place of voidsector.net while the server is off. The Worker also answers
+  // /__ping on voidsector.net: 200 = the real site is back, 503 = still down. Every 30 s this page asks and reloads into the site.
+  var onSite = /(^|\.)voidsector\.net$/.test(location.hostname) && location.hostname !== 'status.voidsector.net';
+  var st = document.getElementById('st'), wrap = document.getElementById('stWrap'), n = 0;
+  if (!onSite) { st.textContent = 'ปิดปรับปรุงอยู่ในขณะนี้'; }
+  else {
+    var tick = function () {
+      n++;
+      fetch('/__ping?' + Date.now(), { cache: 'no-store' }).then(function (r) {
+        if (r.status === 200) { wrap.className = 'st ok'; st.textContent = 'กลับมาแล้ว กำลังพาเข้าเว็บ…'; location.reload(); }
+        else st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n;
+      }).catch(function () { st.textContent = 'ยังปิดปรับปรุงอยู่ · ตรวจสอบครั้งที่ ' + n; });
     };
-    const typeColor = {
-      down: '#ef4444', timeout: '#ef4444', refused: '#ef4444', reset: '#ef4444',
-      dns: '#a855f7', ssl: '#a855f7',
-      error5xx: '#ef4444', error4xx: '#f59e0b',
-      slow: '#f59e0b',
-    };
-    list.innerHTML = [...incidents].sort((a,b) => b.start-a.start).slice(0,10).map(inc => `
-        <div class="incident-item">
-          <div class="inc-dot" style="background:${typeColor[inc.type]||'#ef4444'}"></div>
-          <div>
-            <div class="inc-title">${typeLabel[inc.type]||'เหตุการณ์ผิดปกติ'} ${fmtDuration(inc.end-inc.start)}</div>
-            <div class="inc-sub">${fmtDate(inc.start)} · ${fmtTime(inc.start)} · แก้ไขแล้ว</div>
-          </div>
-        </div>`).join('');
-    }
+    setTimeout(tick, 5000); setInterval(tick, 30000);
   }
-
-  async function check(force = false) {
-    try {
-      const data = await fetch('/api/status', { cache: force ? 'no-store' : 'default' }).then(r => r.json());
-      checks    = data.checks    || [];
-      incidents = data.incidents || [];
-      render(data.current || { up: null, ms: null, ts: null });
-    } catch {
-      render({ up: false, ms: null, ts: Date.now() });
-    }
-  }
-
-  render({ up: null, ms: null, ts: null });
-  check();
-  setInterval(check, CHECK_MS);
 </script>
 </body>
 </html>
